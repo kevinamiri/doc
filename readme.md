@@ -18,22 +18,32 @@ import React, { useState } from 'react';
 const DocumentManager = ({ documents, onDocumentsChange }) => {
   const [newDocumentName, setNewDocumentName] = useState('');
   const [newDocumentURI, setNewDocumentURI] = useState('');
+  const [newDocumentIsActive, setNewDocumentIsActive] = useState(true);
 
   const handleAddDocument = () => {
     const newDocument = {
       name: newDocumentName,
       uri: newDocumentURI,
-      isActive: true,
+      isActive: newDocumentIsActive,
       mimeType: 'application/pdf', // Example, you might want to determine this based on the file or URL
     };
     onDocumentsChange([...documents, newDocument]);
     setNewDocumentName('');
     setNewDocumentURI('');
+    setNewDocumentIsActive(true); // Reset to default active state
   };
 
   const handleRemoveDocument = (index) => {
+    // Instead of removing, we deactivate
+    const updatedDocuments = documents.map((doc, i) => i === index ? { ...doc, isActive: false } : doc);
+    onDocumentsChange(updatedDocuments);
+  };
+
+  const toggleDocumentActiveState = (index) => {
     const updatedDocuments = documents.map((doc, i) => {
-      if (i === index) return { ...doc, isActive: false };
+      if (i === index) {
+        return { ...doc, isActive: !doc.isActive };
+      }
       return doc;
     });
     onDocumentsChange(updatedDocuments);
@@ -53,11 +63,27 @@ const DocumentManager = ({ documents, onDocumentsChange }) => {
         value={newDocumentURI}
         onChange={(e) => setNewDocumentURI(e.target.value)}
       />
+      <label>
+        <input
+          type="checkbox"
+          checked={newDocumentIsActive}
+          onChange={(e) => setNewDocumentIsActive(e.target.checked)}
+        />
+        Active
+      </label>
       <button onClick={handleAddDocument}>Add Document</button>
       <ul>
-        {documents.filter(doc => doc.isActive).map((doc, index) => (
+        {documents.map((doc, index) => (
           <li key={index}>
             {doc.name} ({doc.mimeType}) - <a href={doc.uri} target="_blank" rel="noopener noreferrer">Open</a>
+            <label>
+              <input
+                type="checkbox"
+                checked={doc.isActive}
+                onChange={() => toggleDocumentActiveState(index)}
+              />
+              Active
+            </label>
             <button onClick={() => handleRemoveDocument(index)}>Remove</button>
           </li>
         ))}
